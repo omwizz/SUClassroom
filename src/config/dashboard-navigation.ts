@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   MessageSquareText,
   Settings,
+  Tags,
   Users,
 } from "lucide-react";
 import type { UserRole } from "@/constants/roles";
@@ -128,6 +129,12 @@ export const dashboardNavigation: Record<UserRole, DashboardRoute[]> = {
       title: "Cursos",
       href: "/dashboard/admin/courses",
       icon: BookOpen,
+      roles: ["admin"],
+    },
+    {
+      title: "Categorías",
+      href: "/dashboard/admin/categories",
+      icon: Tags,
       roles: ["admin"],
     },
     {

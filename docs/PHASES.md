@@ -35,7 +35,7 @@ Incluye:
 Pendiente para validación real:
 
 - Configurar Supabase y `DATABASE_URL`.
-- Aplicar migración en la base real.
+- Aplicar migraciones en la base real.
 - Probar confirmación de email con el proyecto Supabase del cliente.
 
 ## Fase 2: Layout base y dashboards iniciales
@@ -60,15 +60,36 @@ Incluye:
 
 ## Fase 3: Cursos, módulos, lecciones y recursos
 
-Estado: pendiente.
+Estado: completada.
 
-Debe implementar:
+Incluye:
 
-- CRUD de cursos para admin.
-- Categorías, módulos y lecciones.
-- Recursos y plantillas.
-- Vista de catálogo para alumno.
-- Primer curso gratuito disponible.
-- Reglas iniciales de publicación y bloqueo.
+- Schema Drizzle y migración para categorías, cursos, módulos, lecciones y recursos de lección.
+- Constantes y tipos para estados, niveles, tipos de lección, proveedores de video y tipos de recurso.
+- Zod schemas `courseCategorySchema`, `courseSchema`, `courseModuleSchema`, `lessonSchema` y `lessonResourceSchema`.
+- Queries para cursos publicados, cursos admin, detalle por slug/id, módulos, lecciones y recursos.
+- Server Actions protegidas para crear, editar, publicar, retirar, archivar, eliminar y reordenar contenido.
+- Seed SQL con categorías base y curso demo gratuito publicado.
+- Catálogo público `/courses`.
+- Detalle público `/courses/[courseSlug]`.
+- Visor público de lección `/courses/[courseSlug]/lessons/[lessonSlug]`.
+- Vista de alumno `/dashboard/student/courses` y detalle `/dashboard/student/courses/[courseSlug]`.
+- Admin de cursos `/dashboard/admin/courses`, alta, edición y builder.
+- Admin de categorías `/dashboard/admin/categories`.
+- Componentes de tarjetas, filtros, badges, formularios, tabla admin, builder, acordeón, visor y lista de recursos.
 
-No iniciar Fase 3 hasta tener build estable de Fase 0-2.
+Notas:
+
+- Si `DATABASE_URL` no está configurado, las lecturas de cursos usan datos demo publicados.
+- Las mutaciones administrativas requieren sesión de `admin` y base de datos configurada.
+- La fase no implementa entregables evaluables ni desbloqueos por avance; eso queda para fases posteriores.
+
+## Siguiente fase
+
+Pendiente:
+
+- Proyectos de estudiante.
+- Entregables reales asociados a cursos/lecciones.
+- Revisión, feedback y criterios de aprobación.
+- Flujos de mentoría y evaluación.
+
