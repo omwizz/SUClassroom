@@ -2,17 +2,17 @@
 
 ## Enfoque
 
-SUClassroom usa arquitectura modular por dominios sobre Next.js App Router. La UI, validaciones, acciones server-side, queries y modelos de datos quedan separados para evitar mezclar lógica sensible en componentes cliente.
+SUClassroom usa arquitectura modular por dominios sobre Next.js App Router. La UI, validaciones, acciones server-side, queries y modelos de datos quedan separados para evitar mezclar logica sensible en componentes cliente.
 
 ## Capas actuales
 
 ```text
 src/app
-  rutas públicas, auth, catálogo y dashboard
+  rutas publicas, auth, catalogo, onboarding y dashboard
 src/components
   ui shadcn, layout, shared y dashboard
 src/features
-  auth y courses
+  auth, courses y projects
 src/lib
   supabase, utils y validaciones
 src/server
@@ -22,18 +22,18 @@ src/db
 src/types
   tipos compartidos
 src/config
-  navegación de dashboard
+  navegacion de dashboard
 src/constants
-  roles, rutas y catálogos de cursos
+  roles, rutas, catalogos de cursos y catalogos de proyectos
 ```
 
 ## Auth y RBAC
 
-La autenticación se apoya en Supabase Auth. El control de acceso tiene dos capas:
+La autenticacion se apoya en Supabase Auth. El control de acceso tiene dos capas:
 
-- `src/proxy.ts`: protege `/dashboard/*`, evita volver a `/login` o `/register` si hay sesión y redirige `/dashboard` según rol.
-- `src/server/guards/role-guard.ts`: valida sesión y rol en server-side antes de renderizar dashboards.
-- Server Actions sensibles vuelven a validar sesión y rol antes de mutar datos.
+- `src/proxy.ts`: protege `/dashboard/*`, evita volver a `/login` o `/register` si hay sesion y redirige `/dashboard` segun rol.
+- `src/server/guards/role-guard.ts`: valida sesion y rol en server-side antes de renderizar dashboards.
+- Server Actions sensibles vuelven a validar sesion, rol y ownership antes de mutar datos.
 
 Rutas por rol:
 
@@ -48,24 +48,31 @@ Permisos base:
 - Dashboard mentor: `mentor` o `admin`
 - Dashboard admin: solo `admin`
 - Dashboard institution: `institution` o `admin`
-- Mutaciones de cursos/categorías/módulos/lecciones/recursos: solo `admin`
+- Mutaciones de cursos/categorias/modulos/lecciones/recursos: solo `admin`
+- Onboarding y proyecto de alumno: `student` sobre su propia ficha. `admin` solo para consulta y archivo basico desde vistas administrativas.
+- Dashboard student redirige a `/onboarding` cuando el alumno no completo diagnostico inicial.
 
 ## Base de datos
 
 Schema Drizzle base:
 
 - `profiles`: perfil funcional conectado a Supabase Auth.
-- `roles`: catálogo de roles del sistema.
-- `user_roles`: relación entre perfil y roles.
-- `audit_logs`: tabla preparada para auditoría de acciones críticas.
+- `roles`: catalogo de roles del sistema.
+- `user_roles`: relacion entre perfil y roles.
+- `audit_logs`: tabla preparada para auditoria de acciones criticas.
 
 Schema Drizzle de Fase 3:
 
-- `course_categories`: categorías activas/inactivas para ordenar cursos.
-- `courses`: ficha de curso, estado `draft/published/archived`, nivel, duración, gratuidad y publicación.
-- `course_modules`: módulos ordenables por curso.
-- `lessons`: lecciones ordenables por módulo con tipo, proveedor de video, preview y obligatoriedad.
-- `lesson_resources`: recursos por lección con tipo, URLs y descarga.
+- `course_categories`: categorias activas/inactivas para ordenar cursos.
+- `courses`: ficha de curso, estado `draft/published/archived`, nivel, duracion, gratuidad y publicacion.
+- `course_modules`: modulos ordenables por curso.
+- `lessons`: lecciones ordenables por modulo con tipo, proveedor de video, preview y obligatoriedad.
+- `lesson_resources`: recursos por leccion con tipo, URLs y descarga.
+
+Schema Drizzle de Fase 4:
+
+- `student_onboarding`: diagnostico inicial por alumno con perfil, experiencia, objetivo, area, etapa, desafio, motivacion y fecha de completado.
+- `student_projects`: ficha base del proyecto del alumno con nombre, slug, descripcion, problema, solucion, publico, etapa, area, impacto social y estado `draft/active/paused/completed/archived`.
 
 El cliente Drizzle se inicializa de forma lazy en `src/db/client.ts` para evitar fallos durante `next build` cuando no existen variables locales.
 
@@ -81,9 +88,27 @@ La Fase 3 vive en:
 - `src/server/actions/course-actions.ts`
 - `src/features/courses`
 
-Las lecturas públicas usan `getPublishedCourses` y `getCourseBySlug`, filtrando solo cursos publicados. Si `DATABASE_URL` no está configurado, se usa un dataset demo para que el catálogo y las páginas de curso sigan funcionando en local.
+Las lecturas publicas usan `getPublishedCourses` y `getCourseBySlug`, filtrando solo cursos publicados. Si `DATABASE_URL` no esta configurado, se usa un dataset demo para que el catalogo y las paginas de curso sigan funcionando en local.
 
-Las mutaciones administrativas usan Server Actions, Zod y verificación de rol. Sin `DATABASE_URL`, devuelven un error claro y no intentan persistir.
+Las mutaciones administrativas usan Server Actions, Zod y verificacion de rol. Sin `DATABASE_URL`, devuelven un error claro y no intentan persistir.
+
+## Onboarding y proyectos
+
+La Fase 4 vive en:
+
+- `src/constants/projects.ts`
+- `src/types/projects.ts`
+- `src/lib/validations/projects.ts`
+- `src/db/schema/projects.ts`
+- `src/server/queries/projects.ts`
+- `src/server/actions/project-actions.ts`
+- `src/server/services/onboarding-service.ts`
+- `src/server/services/student-project-service.ts`
+- `src/features/projects`
+
+El onboarding usa un wizard client-side con React Hook Form y Zod, pero las mutaciones se hacen mediante Server Actions. Cada accion vuelve a verificar sesion, rol y ownership antes de escribir.
+
+El alumno puede registrar y editar su proyecto principal. El admin puede listar proyectos, filtrarlos por estado/etapa/busqueda, abrir una ficha basica y archivar un proyecto. No se implementan revision, feedback, aprobacion ni entregables formales en esta fase.
 
 ## Supabase
 
@@ -93,11 +118,11 @@ Clientes:
 - `src/lib/supabase/server.ts`: cliente server con cookies async.
 - `src/lib/supabase/middleware.ts`: cliente para proxy.
 
-Storage queda preparado a nivel de variables y stack, pero la Fase 3 no implementa cargas de archivos; los recursos guardan URLs externas o de archivo.
+Storage queda preparado a nivel de variables y stack, pero la Fase 4 no implementa cargas de archivos ni usa service role key en cliente.
 
 ## UI
 
-La UI usa Tailwind CSS v4, shadcn/ui y Lucide React. La dirección visual es dark mode profesional con paneles compactos, sidebar por rol, topbar, cards de métricas, tablas, formularios, estados base, acordeones y diálogos de confirmación.
+La UI usa Tailwind CSS v4, shadcn/ui y Lucide React. La direccion visual es dark mode profesional con paneles compactos, sidebar por rol, topbar, cards de metricas, tablas, formularios, estados base, acordeones y dialogos de confirmacion.
 
 Componentes reutilizables base:
 
@@ -144,7 +169,21 @@ Componentes de cursos:
 - `LessonResourceForm`
 - `CourseBuilder`
 
-## Límites de esta fase
+Componentes de onboarding y proyectos:
 
-No se implementan proyectos, entregables evaluables, rúbricas, feedback, aprobaciones, mentorías, pagos, instituciones avanzadas, reportes reales, certificados, IA ni comunidad. La lección `assignment_intro` solo prepara el contexto para futuros entregables.
+- `OnboardingWizard`
+- `OnboardingStep`
+- `OnboardingProgress`
+- `ProjectForm`
+- `ProjectSummaryCard`
+- `ProjectStageBadge`
+- `ProjectStatusBadge`
+- `StudentProjectPanel`
+- `AdminProjectsTable`
+- `ProjectDetailView`
+- `NextStepCard`
+
+## Limites de esta fase
+
+No se implementan entregables evaluables, rubricas, feedback, aprobaciones, mentorias completas, pagos, instituciones avanzadas, reportes reales, certificados, IA ni comunidad. La leccion `assignment_intro` solo prepara el contexto para futuros entregables.
 

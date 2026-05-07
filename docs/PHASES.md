@@ -1,6 +1,6 @@
-# Fases de implementación
+# Fases de implementacion
 
-## Fase 0: Setup técnico
+## Fase 0: Setup tecnico
 
 Estado: completada.
 
@@ -17,7 +17,7 @@ Incluye:
 - Drizzle configurado.
 - Supabase preparado.
 
-## Fase 1: Autenticación y roles base
+## Fase 1: Autenticacion y roles base
 
 Estado: completada a nivel base.
 
@@ -25,18 +25,18 @@ Incluye:
 
 - Roles `student`, `mentor`, `admin`, `institution`.
 - Schema Drizzle para `profiles`, `roles`, `user_roles`, `audit_logs`.
-- Migración SQL inicial.
+- Migracion SQL inicial.
 - Zod schemas para login, registro y perfil.
 - Server Actions de auth.
-- Proxy de autenticación para rutas protegidas.
+- Proxy de autenticacion para rutas protegidas.
 - Guards server-side por rol.
-- Redirección por rol.
+- Redireccion por rol.
 
-Pendiente para validación real:
+Pendiente para validacion real:
 
 - Configurar Supabase y `DATABASE_URL`.
 - Aplicar migraciones en la base real.
-- Probar confirmación de email con el proyecto Supabase del cliente.
+- Probar confirmacion de email con el proyecto Supabase del cliente.
 
 ## Fase 2: Layout base y dashboards iniciales
 
@@ -44,7 +44,7 @@ Estado: completada.
 
 Incluye:
 
-- Landing pública.
+- Landing publica.
 - Login.
 - Register.
 - Forgot password placeholder.
@@ -54,42 +54,65 @@ Incluye:
 - Topbar.
 - Dashboard inicial de alumno.
 - Dashboard inicial de mentor.
-- Dashboard inicial de admin con gráfico Recharts.
-- Dashboard inicial de institución.
-- Rutas placeholder con estado "Próxima fase".
+- Dashboard inicial de admin con grafico Recharts.
+- Dashboard inicial de institucion.
+- Rutas placeholder con estado "Proxima fase".
 
-## Fase 3: Cursos, módulos, lecciones y recursos
+## Fase 3: Cursos, modulos, lecciones y recursos
 
 Estado: completada.
 
 Incluye:
 
-- Schema Drizzle y migración para categorías, cursos, módulos, lecciones y recursos de lección.
-- Constantes y tipos para estados, niveles, tipos de lección, proveedores de video y tipos de recurso.
+- Schema Drizzle y migracion para categorias, cursos, modulos, lecciones y recursos de leccion.
+- Constantes y tipos para estados, niveles, tipos de leccion, proveedores de video y tipos de recurso.
 - Zod schemas `courseCategorySchema`, `courseSchema`, `courseModuleSchema`, `lessonSchema` y `lessonResourceSchema`.
-- Queries para cursos publicados, cursos admin, detalle por slug/id, módulos, lecciones y recursos.
+- Queries para cursos publicados, cursos admin, detalle por slug/id, modulos, lecciones y recursos.
 - Server Actions protegidas para crear, editar, publicar, retirar, archivar, eliminar y reordenar contenido.
-- Seed SQL con categorías base y curso demo gratuito publicado.
-- Catálogo público `/courses`.
-- Detalle público `/courses/[courseSlug]`.
-- Visor público de lección `/courses/[courseSlug]/lessons/[lessonSlug]`.
+- Seed SQL con categorias base y curso demo gratuito publicado.
+- Catalogo publico `/courses`.
+- Detalle publico `/courses/[courseSlug]`.
+- Visor publico de leccion `/courses/[courseSlug]/lessons/[lessonSlug]`.
 - Vista de alumno `/dashboard/student/courses` y detalle `/dashboard/student/courses/[courseSlug]`.
-- Admin de cursos `/dashboard/admin/courses`, alta, edición y builder.
-- Admin de categorías `/dashboard/admin/categories`.
-- Componentes de tarjetas, filtros, badges, formularios, tabla admin, builder, acordeón, visor y lista de recursos.
+- Admin de cursos `/dashboard/admin/courses`, alta, edicion y builder.
+- Admin de categorias `/dashboard/admin/categories`.
+- Componentes de tarjetas, filtros, badges, formularios, tabla admin, builder, acordeon, visor y lista de recursos.
 
 Notas:
 
-- Si `DATABASE_URL` no está configurado, las lecturas de cursos usan datos demo publicados.
-- Las mutaciones administrativas requieren sesión de `admin` y base de datos configurada.
+- Si `DATABASE_URL` no esta configurado, las lecturas de cursos usan datos demo publicados.
+- Las mutaciones administrativas requieren sesion de `admin` y base de datos configurada.
 - La fase no implementa entregables evaluables ni desbloqueos por avance; eso queda para fases posteriores.
+
+## Fase 4: Onboarding, diagnostico inicial y proyecto del alumno
+
+Estado: completada.
+
+Incluye:
+
+- Schema Drizzle y migracion para `student_onboarding` y `student_projects`.
+- Constantes y tipos para perfil de alumno, experiencia, etapas, estados y areas de proyecto.
+- Zod schemas `onboardingSchema`, `studentProjectSchema` y `onboardingWizardSchema`.
+- Services `OnboardingService` y `StudentProjectService` para siguiente paso, slug y curso sugerido.
+- Queries para onboarding, proyecto actual, detalle por id, listado admin y archivo basico.
+- Server Actions protegidas para completar/actualizar onboarding, crear/editar proyecto, consultar proyecto y archivar desde admin.
+- Ruta `/onboarding`.
+- Bloqueo de `/dashboard/student/*` cuando el alumno no completo onboarding.
+- Dashboard student conectado al proyecto actual, estado, etapa, area y CTA de curso recomendado.
+- Vista `/dashboard/student/project` y edicion `/dashboard/student/project/edit`.
+- Vista admin `/dashboard/admin/projects` con busqueda/filtros y detalle `/dashboard/admin/projects/[projectId]`.
+
+Notas:
+
+- Sin `DATABASE_URL`, las mutaciones devuelven un mensaje claro y no intentan persistir.
+- Las acciones revalidan permisos y ownership aunque la UI ya este protegida por rutas.
+- Esta fase no incluye entregables formales, revision por mentor, feedback, aprobaciones, pagos, instituciones/cohortes, reportes avanzados ni IA.
 
 ## Siguiente fase
 
 Pendiente:
 
-- Proyectos de estudiante.
 - Entregables reales asociados a cursos/lecciones.
-- Revisión, feedback y criterios de aprobación.
-- Flujos de mentoría y evaluación.
+- Revision, feedback y criterios de aprobacion.
+- Flujos de mentoria y evaluacion.
 
