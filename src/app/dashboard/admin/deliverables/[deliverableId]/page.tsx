@@ -1,4 +1,7 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ClipboardCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { DeliverableDetailView } from "@/features/deliverables/components/deliverable-detail-view";
 import { requireRole } from "@/server/guards/role-guard";
 import { getAdminDeliverableById } from "@/server/queries/deliverables";
@@ -20,6 +23,17 @@ export default async function AdminDeliverableDetailPage({
     notFound();
   }
 
-  return <DeliverableDetailView adminView deliverable={deliverable} />;
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button asChild>
+          <Link href={`/dashboard/admin/deliverables/${deliverable.id}/review`}>
+            <ClipboardCheck />
+            Revisar entregable
+          </Link>
+        </Button>
+      </div>
+      <DeliverableDetailView adminView deliverable={deliverable} />
+    </div>
+  );
 }
-

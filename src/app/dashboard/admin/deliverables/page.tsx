@@ -45,7 +45,7 @@ export default async function AdminDeliverablesPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Seguimiento operativo de borradores, envios y evidencia. La evaluacion formal queda para la siguiente fase."
+        description="Seguimiento operativo de envios, revision mentor/admin y feedback estructurado."
         eyebrow="Admin"
         title="Entregables"
       />
@@ -58,14 +58,14 @@ export default async function AdminDeliverablesPage({
           value={String(deliverables.length)}
         />
         <MetricCard
-          detail="En espera de revision futura"
+          detail="En espera de revision"
           icon={FileText}
           title="Enviados"
           value={String(sent)}
           tone="warning"
         />
         <MetricCard
-          detail="Storage privado preparado"
+          detail="Archivos adjuntos privados"
           icon={FileText}
           title="Evidencias"
           value={String(
@@ -107,4 +107,3 @@ export default async function AdminDeliverablesPage({
     </div>
   );
 }
-

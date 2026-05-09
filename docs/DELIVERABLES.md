@@ -1,6 +1,6 @@
 # Entregables
 
-Documento de referencia de la Fase 5.
+Documento de referencia de la Fase 5, actualizado con la conexion a Fase 6.
 
 ## Alcance implementado
 
@@ -14,10 +14,11 @@ Documento de referencia de la Fase 5.
 - Historial de versiones.
 - Vista del alumno.
 - Vista administrativa basica.
+- Conexion con revision, evaluacion y feedback de Fase 6.
 
 ## Fuera de alcance
 
-No se implementan evaluacion por mentor, aprobacion/rechazo formal, feedback avanzado, pagos, Qulqi, mentorias completas, desbloqueos avanzados, reportes, instituciones/cohortes ni IA.
+No se implementan pagos, Qulqi, mentorias completas, desbloqueos avanzados, reportes, instituciones/cohortes ni IA.
 
 ## Tablas
 
@@ -87,11 +88,17 @@ No se implementan evaluacion por mentor, aprobacion/rechazo formal, feedback ava
 
 - `draft`: editable por el alumno.
 - `submitted`: enviado y bloqueado para edicion libre.
-- `under_review`: reservado para la fase de mentor.
+- `under_review`: revision iniciada por mentor/admin.
 - `changes_requested`: permite reenvio.
 - `rejected`: permite reenvio.
-- `approved`: reservado para la fase de evaluacion.
+- `approved`: aprobado por mentor/admin.
 - `resubmitted`: reenviado y bloqueado para edicion libre.
+
+La Fase 6 actualiza estos estados desde evaluaciones:
+
+- Decision `approved` -> `deliverables.status = approved`.
+- Decision `rejected` -> `deliverables.status = rejected`.
+- Decision `changes_requested` -> `deliverables.status = changes_requested`.
 
 ## Seguridad
 
@@ -99,6 +106,8 @@ No se implementan evaluacion por mentor, aprobacion/rechazo formal, feedback ava
 - El alumno solo crea entregables para su propio proyecto.
 - El alumno solo ve y edita sus entregables.
 - El admin puede listar y abrir todos los entregables.
+- Solo mentor asignado o admin puede revisar/evaluar un entregable.
+- El alumno no puede evaluar ni editar feedback.
 - Los archivos se guardan en bucket privado y se abren con signed URLs temporales.
 
 ## Rutas
@@ -114,6 +123,17 @@ Admin:
 
 - `/dashboard/admin/deliverables`
 - `/dashboard/admin/deliverables/[deliverableId]`
+- `/dashboard/admin/deliverables/[deliverableId]/review`
+
+Mentor:
+
+- `/dashboard/mentor/deliverables`
+- `/dashboard/mentor/deliverables/[deliverableId]`
+
+Feedback alumno:
+
+- `/dashboard/student/feedback`
+- `/dashboard/student/deliverables/[deliverableId]/feedback`
 
 ## Archivos principales
 
@@ -128,3 +148,11 @@ Admin:
 - `src/server/services/storage-service.ts`
 - `src/features/deliverables/components`
 
+## Integracion con evaluaciones
+
+La revision de un entregable no muta directamente desde los componentes de entregables. La decision se registra mediante `src/server/actions/evaluation-actions.ts`, que valida rol, asignacion de mentor y estado revisable antes de llamar a queries de evaluacion.
+
+El historial del alumno se conserva en dos niveles:
+
+- `deliverable_versions`: snapshots de cada envio o reenvio.
+- `evaluations`, `feedback` y `evaluation_scores`: historial de revision, feedback y criterios.

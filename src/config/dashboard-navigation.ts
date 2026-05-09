@@ -128,6 +128,12 @@ export const dashboardNavigation: Record<UserRole, DashboardRoute[]> = {
       roles: ["admin"],
     },
     {
+      title: "Asignaciones",
+      href: "/dashboard/admin/mentor-assignments",
+      icon: "users",
+      roles: ["admin"],
+    },
+    {
       title: "Proyectos",
       href: "/dashboard/admin/projects",
       icon: "folder",

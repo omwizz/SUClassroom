@@ -12,7 +12,7 @@ src/app
 src/components
   ui shadcn, layout, shared y dashboard
 src/features
-  auth, courses, projects y deliverables
+  auth, courses, projects, deliverables y evaluations
 src/lib
   supabase, utils y validaciones
 src/server
@@ -24,7 +24,7 @@ src/types
 src/config
   navegacion de dashboard
 src/constants
-  roles, rutas, catalogos de cursos, proyectos y entregables
+  roles, rutas, catalogos de cursos, proyectos, entregables y evaluaciones
 ```
 
 ## Auth y RBAC
@@ -51,6 +51,7 @@ Permisos base:
 - Mutaciones de cursos/categorias/modulos/lecciones/recursos: solo `admin`
 - Onboarding y proyecto de alumno: `student` sobre su propia ficha. `admin` solo para consulta y archivo basico desde vistas administrativas.
 - Entregables: `student` crea/edita solo sus borradores y adjunta evidencia propia; `admin` consulta todos los entregables desde vistas administrativas.
+- Evaluaciones: solo `mentor` asignado o `admin` puede iniciar revision, aprobar, rechazar, solicitar cambios y crear feedback. `student` solo lee feedback visible sobre sus propios entregables.
 - Dashboard student redirige a `/onboarding` cuando el alumno no completo diagnostico inicial.
 
 ## Base de datos
@@ -82,6 +83,15 @@ Schema Drizzle de Fase 5:
 - `deliverable_files`: metadatos de archivos privados subidos a Supabase Storage.
 - `deliverable_links`: evidencia externa asociada al entregable.
 - `deliverable_versions`: historial de snapshots cuando el alumno envia o reenvia.
+
+Schema Drizzle de Fase 6:
+
+- `mentor_assignments`: asignacion basica de mentor por alumno, proyecto y/o curso.
+- `evaluation_criteria`: criterios o rubrica por curso.
+- `evaluations`: registro de revision por entregable, mentor, decision, puntaje y snapshot de rubrica.
+- `feedback`: feedback estructurado asociado a evaluacion y entregable.
+- `evaluation_scores`: puntajes y comentarios por criterio.
+- `notifications`: notificaciones internas basicas para alumnos.
 
 El cliente Drizzle se inicializa de forma lazy en `src/db/client.ts` para evitar fallos durante `next build` cuando no existen variables locales.
 
@@ -135,7 +145,33 @@ La Fase 5 vive en:
 
 El alumno puede crear borradores, editarlos mientras el estado lo permita, adjuntar archivos, agregar enlaces, enviar y reenviar cuando el estado sea `changes_requested` o `rejected`. Cada envio registra una version en `deliverable_versions`.
 
-El admin puede listar y abrir entregables, ver alumno, curso, proyecto, evidencia y versiones. No se implementan evaluacion por mentor, feedback, aprobacion/rechazo operativo ni cambios de estado de revision en esta fase.
+El admin puede listar y abrir entregables, ver alumno, curso, proyecto, evidencia y versiones. La revision formal, aprobacion, rechazo y feedback viven en el dominio de evaluaciones de Fase 6.
+
+## Evaluaciones y feedback
+
+La Fase 6 vive en:
+
+- `src/constants/evaluations.ts`
+- `src/types/evaluations.ts`
+- `src/lib/validations/evaluations.ts`
+- `src/db/schema/evaluations.ts`
+- `src/server/queries/evaluations.ts`
+- `src/server/actions/evaluation-actions.ts`
+- `src/server/services/evaluation-service.ts`
+- `src/server/services/feedback-service.ts`
+- `src/server/services/mentor-assignment-service.ts`
+- `src/server/services/notification-service.ts`
+- `src/features/evaluations`
+
+El admin asigna mentores a entregables desde `/dashboard/admin/mentor-assignments`. Un mentor solo ve y evalua entregables que coinciden con sus asignaciones activas. El admin puede revisar cualquier entregable.
+
+La evaluacion cambia el estado operativo del entregable:
+
+- `approved`: entregable aprobado.
+- `rejected`: entregable rechazado.
+- `changes_requested`: cambios solicitados y reenvio habilitado por la fase de entregables.
+
+Cada evaluacion guarda historial, feedback estructurado visible u oculto para alumno, puntajes opcionales por criterio y una notificacion interna. La fase prepara el evento de aprobacion para progreso/desbloqueos posteriores, pero no desbloquea cursos automaticamente.
 
 ## Supabase
 
@@ -150,6 +186,7 @@ Base de datos y seguridad:
 - `DATABASE_URL` debe usar un usuario dedicado de base de datos, no una clave publica ni service role. En el entorno Supabase actual se usa `suclassroom_app` por Transaction Pooler.
 - `src/db/client.ts` usa SSL, timeout y `prepare: false` para ser compatible con Supabase Pooler.
 - RLS esta activo en las tablas publicas de la app. El rol `suclassroom_app` conserva acceso server-side; usuarios autenticados solo pueden leer/editar datos propios en perfiles, onboarding, proyectos y entregables.
+- Las tablas de evaluaciones, feedback, asignaciones y notificaciones tienen RLS activo. El servidor usa `suclassroom_app`; alumnos, mentores y admins tienen politicas de lectura acotadas segun ownership/asignacion.
 - El contenido publicado de cursos queda disponible en lectura para `anon` y `authenticated` mediante politicas RLS.
 - `public.handle_new_auth_user()` sincroniza nuevos usuarios de Supabase Auth hacia `profiles` y `user_roles` mediante trigger interno sobre `auth.users`.
 - La funcion de sincronizacion no es invocable desde la API publica (`anon`/`authenticated` no tienen `EXECUTE`).
@@ -236,6 +273,22 @@ Componentes de entregables:
 - `DeliverableRequirementCard`
 - `SubmitConfirmationDialog`
 
-## Limites de esta fase
+Componentes de evaluaciones y feedback:
 
-No se implementan evaluacion por mentor, rubricas, feedback, aprobaciones/rechazos formales desde mentor, mentorias completas, pagos, instituciones avanzadas, reportes reales, certificados, IA ni comunidad.
+- `MentorDeliverablesTable`
+- `MentorAssignmentPanel`
+- `EvaluationForm`
+- `EvaluationCriteriaList`
+- `EvaluationDecisionButtons`
+- `FeedbackForm`
+- `FeedbackCard`
+- `FeedbackTimeline`
+- `EvaluationHistory`
+- `ReviewStatusBadge`
+- `StudentFeedbackList`
+- `NotificationDropdown`
+- `DeliverableReviewLayout`
+
+## Limites actuales
+
+No se implementan mentorias completas, pagos, instituciones avanzadas, reportes reales, certificados, IA, comunidad ni desbloqueos automaticos avanzados.

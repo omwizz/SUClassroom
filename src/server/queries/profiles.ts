@@ -1,5 +1,5 @@
 import type { User } from "@supabase/supabase-js";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { getDb, hasDatabaseUrl } from "@/db/client";
 import { profiles, userRoles } from "@/db/schema";
 import {
@@ -176,4 +176,23 @@ export async function updateProfileByAuthUserId(
   });
 
   return toProfile(profile, roles);
+}
+
+export async function getProfilesByRole(role: UserRole) {
+  if (!hasDatabaseUrl()) {
+    return [];
+  }
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      profile: profiles,
+      role: userRoles,
+    })
+    .from(userRoles)
+    .innerJoin(profiles, eq(profiles.id, userRoles.profileId))
+    .where(and(eq(userRoles.role, role), eq(profiles.status, "active")))
+    .orderBy(asc(profiles.fullName), asc(profiles.email));
+
+  return rows.map((row) => toProfile(row.profile, [row.role]));
 }

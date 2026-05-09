@@ -3,6 +3,7 @@ import { getNavigationForRole } from "@/config/dashboard-navigation";
 import { DashboardContent } from "@/components/layout/dashboard-content";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { DashboardTopbar } from "@/components/layout/dashboard-topbar";
+import { getUserNotifications } from "@/server/queries/evaluations";
 import type { Profile } from "@/types/auth";
 
 type DashboardShellProps = {
@@ -10,8 +11,9 @@ type DashboardShellProps = {
   children: ReactNode;
 };
 
-export function DashboardShell({ profile, children }: DashboardShellProps) {
+export async function DashboardShell({ profile, children }: DashboardShellProps) {
   const navigation = getNavigationForRole(profile.activeRole);
+  const notifications = await getUserNotifications(profile.id);
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -19,7 +21,11 @@ export function DashboardShell({ profile, children }: DashboardShellProps) {
         <DashboardSidebar navigation={navigation} profile={profile} />
       </div>
       <div className="flex min-h-dvh flex-col lg:pl-72">
-        <DashboardTopbar navigation={navigation} profile={profile} />
+        <DashboardTopbar
+          navigation={navigation}
+          notifications={notifications}
+          profile={profile}
+        />
         <DashboardContent>{children}</DashboardContent>
       </div>
     </div>

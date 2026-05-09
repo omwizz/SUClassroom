@@ -7,102 +7,103 @@ import {
 } from "lucide-react";
 import { ActionCard } from "@/components/dashboard/action-card";
 import { DashboardSection } from "@/components/dashboard/dashboard-section";
-import { DataTable } from "@/components/dashboard/data-table";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { StatusBadge } from "@/components/shared/status-badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { MentorDeliverablesTable } from "@/features/evaluations/components/mentor-deliverables-table";
 import { requireRole } from "@/server/guards/role-guard";
+import {
+  getMentorAssignments,
+  getMentorDeliverables,
+  getMentorEvaluationHistory,
+} from "@/server/queries/evaluations";
 
 export const dynamic = "force-dynamic";
 
-const pendingDeliverables = [
-  {
-    alumno: "Alumno demo",
-    entregable: "Hipótesis de proyecto",
-    estado: "Pendiente",
-  },
-  {
-    alumno: "Participante demo",
-    entregable: "Evidencia de validación",
-    estado: "En revisión",
-  },
-];
-
 export default async function MentorDashboardPage() {
-  await requireRole(["mentor", "admin"]);
+  const profile = await requireRole(["mentor", "admin"]);
+  const [deliverables, assignments, evaluations] =
+    profile.activeRole === "mentor"
+      ? await Promise.all([
+          getMentorDeliverables(profile.id),
+          getMentorAssignments(profile.id),
+          getMentorEvaluationHistory(profile.id),
+        ])
+      : [[], [], []];
+  const pending = deliverables.filter((item) =>
+    ["submitted", "resubmitted"].includes(item.status),
+  ).length;
+  const reviewing = deliverables.filter(
+    (item) => item.status === "under_review",
+  ).length;
+  const approved = evaluations.filter(
+    (item) => item.decision === "approved",
+  ).length;
 
   return (
     <div className="space-y-8">
       <PageHeader
-        description="Prioriza entregables, alumnos asignados y próximas sesiones de acompañamiento."
+        description="Prioriza entregables asignados, revisiones abiertas y feedback accionable."
         eyebrow="Dashboard mentor"
-        title="Panel de revisión"
+        title="Panel de revision"
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          detail="Placeholder para bandeja de revisión"
+          detail="Listos para revisar"
           icon={FileText}
-          title="Entregables pendientes"
-          value="8"
+          title="Pendientes"
+          value={String(pending)}
           tone="warning"
         />
         <MetricCard
-          detail="Asignación futura por admin"
-          icon={Users}
-          title="Alumnos asignados"
-          value="24"
-        />
-        <MetricCard
-          detail="Agenda preparada para fase posterior"
-          icon={CalendarClock}
-          title="Asesorías próximas"
-          value="3"
+          detail="Con revision iniciada"
+          icon={ClipboardCheck}
+          title="En revision"
+          value={String(reviewing)}
           tone="info"
         />
         <MetricCard
-          detail="Métrica base de productividad"
+          detail="Asignaciones activas e historicas"
+          icon={Users}
+          title="Alumnos asignados"
+          value={String(assignments.length)}
+        />
+        <MetricCard
+          detail="Evaluaciones aprobadas"
           icon={ClipboardCheck}
-          title="Revisiones aprobadas"
-          value="16"
+          title="Aprobados"
+          value={String(approved)}
           tone="success"
         />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card className="glass-panel rounded-lg">
-          <CardHeader>
-            <div className="flex items-center justify-between gap-4">
-              <CardTitle>Entregables recientes</CardTitle>
-              <StatusBadge status="Próxima fase" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              columns={[
-                { header: "Alumno", accessor: "alumno" },
-                { header: "Entregable", accessor: "entregable" },
-                { header: "Estado", accessor: "estado" },
-              ]}
-              data={pendingDeliverables}
-            />
+          <CardContent className="p-5">
+            <MentorDeliverablesTable deliverables={deliverables.slice(0, 6)} />
           </CardContent>
         </Card>
 
-        <DashboardSection title="Accesos rápidos">
+        <DashboardSection title="Accesos rapidos">
           <div className="grid gap-4">
             <ActionCard
-              description="Bandeja placeholder de entregables por revisar."
+              description="Abre tu bandeja de entregables asignados."
               href="/dashboard/mentor/deliverables"
               icon={FileText}
-              title="Entregables"
+              title="Revisar entregables"
             />
             <ActionCard
-              description="Base para emitir evaluación y feedback estructurado."
+              description="Consulta decisiones, scores y feedback emitido."
               href="/dashboard/mentor/evaluations"
               icon={MessageSquareText}
               title="Evaluaciones"
+            />
+            <ActionCard
+              description="Agenda preparada para una fase posterior."
+              href="/dashboard/mentor/mentorship"
+              icon={CalendarClock}
+              title="Mentorias"
             />
           </div>
         </DashboardSection>

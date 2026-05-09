@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { BookOpen, Compass, FileText, FolderKanban, Target } from "lucide-react";
+import {
+  BookOpen,
+  Compass,
+  FileText,
+  FolderKanban,
+  MessageSquareText,
+  Target,
+} from "lucide-react";
 import { ActionCard } from "@/components/dashboard/action-card";
 import { DashboardSection } from "@/components/dashboard/dashboard-section";
 import { MetricCard } from "@/components/dashboard/metric-card";
@@ -17,6 +24,7 @@ import {
   findStudentOnboarding,
 } from "@/server/queries/projects";
 import { getStudentDeliverables } from "@/server/queries/deliverables";
+import { getStudentFeedback } from "@/server/queries/evaluations";
 import { OnboardingService } from "@/server/services/onboarding-service";
 import { StudentProjectService } from "@/server/services/student-project-service";
 
@@ -25,12 +33,14 @@ export const dynamic = "force-dynamic";
 export default async function StudentDashboardPage() {
   const profile = await requireRole(["student", "admin"]);
   const name = profile.fullName?.split(" ")[0] ?? "Alumno";
-  const [onboarding, project, deliverables] = await Promise.all([
+  const [onboarding, project, deliverables, feedback] = await Promise.all([
     findStudentOnboarding(profile.id),
     findCurrentStudentProject(profile.id),
     getStudentDeliverables(profile.id),
+    getStudentFeedback(profile.id),
   ]);
   const latestDeliverable = deliverables.at(0);
+  const latestFeedback = feedback.at(0);
   const nextStep = project
     ? StudentProjectService.nextStep(project)
     : OnboardingService.nextDashboardStep(onboarding);
@@ -49,7 +59,7 @@ export default async function StudentDashboardPage() {
         title={`Bienvenido, ${name}`}
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <MetricCard
           detail="Diagnostico inicial completado"
           icon={Target}
@@ -85,6 +95,13 @@ export default async function StudentDashboardPage() {
           title="Entregables"
           value={String(deliverables.length)}
           tone="info"
+        />
+        <MetricCard
+          detail={latestFeedback?.summary ?? "Sin feedback recibido"}
+          icon={MessageSquareText}
+          title="Feedback"
+          value={String(feedback.length)}
+          tone="success"
         />
       </div>
 
@@ -133,10 +150,10 @@ export default async function StudentDashboardPage() {
             title="Entregables"
           />
           <ActionCard
-            description="Ajusta diagnostico y datos base desde el flujo inicial."
-            href="/dashboard/student/project/edit"
-            icon={Target}
-            title="Editar proyecto"
+            description="Revisa observaciones del mentor y siguientes pasos."
+            href="/dashboard/student/feedback"
+            icon={MessageSquareText}
+            title="Feedback"
           />
         </div>
       </DashboardSection>

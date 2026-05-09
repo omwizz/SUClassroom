@@ -140,12 +140,45 @@ Notas:
 - Los alumnos solo acceden a sus propios entregables. Admin puede consultar todos.
 - No se implementa evaluacion por mentor, aprobacion/rechazo formal, feedback avanzado, pagos, mentorias completas, instituciones/cohortes, reportes avanzados ni IA.
 
+## Fase 6: Evaluacion de entregables y feedback de mentor
+
+Estado: completada.
+
+Incluye:
+
+- Schema Drizzle y migracion para `mentor_assignments`, `evaluations`, `feedback`, `evaluation_criteria`, `evaluation_scores` y `notifications`.
+- Constantes y tipos para estados de asignacion, evaluacion, decision, prioridad de feedback y tipos de notificacion.
+- Zod schemas `evaluationSchema`, `feedbackSchema` y `mentorAssignmentSchema`.
+- Services `EvaluationService`, `FeedbackService`, `MentorAssignmentService` y `NotificationService`.
+- Queries y Server Actions protegidas para asignar mentores, iniciar revision, registrar evaluaciones, crear/editar feedback permitido, listar historial y gestionar notificaciones internas.
+- Bandeja real de mentor en `/dashboard/mentor/deliverables`.
+- Detalle de revision para mentor en `/dashboard/mentor/deliverables/[deliverableId]`.
+- Historial de evaluaciones en `/dashboard/mentor/evaluations`.
+- Feedback emitido en `/dashboard/mentor/feedback`.
+- Alumnos asignados en `/dashboard/mentor/students`.
+- Vista de feedback para alumno en `/dashboard/student/feedback`.
+- Detalle de feedback por entregable en `/dashboard/student/deliverables/[deliverableId]/feedback`.
+- Revision admin en `/dashboard/admin/deliverables/[deliverableId]/review`.
+- Gestion basica de asignaciones en `/dashboard/admin/mentor-assignments`.
+- Dashboard student actualizado con feedback reciente, estado de entregables y siguientes pasos.
+- Dashboard mentor actualizado con metricas reales de entregables asignados.
+- Dashboard admin actualizado con pendientes, evaluaciones y asignaciones.
+
+Notas:
+
+- Solo el mentor asignado o admin puede evaluar.
+- Student no puede evaluar ni editar feedback.
+- Admin puede evaluar todos los entregables y asignar mentores.
+- Las decisiones actualizan el estado del entregable: `approved`, `rejected` o `changes_requested`.
+- Rechazo y solicitud de cambios requieren feedback accionable.
+- Las notificaciones internas quedan preparadas para el alumno.
+- Esta fase no implementa pagos, Qulqi, mentorias completas, desbloqueos automaticos avanzados, reportes avanzados, instituciones/cohortes, IA ni certificados.
+
 ## Siguiente fase
 
 Pendiente:
 
-- Revision por mentor.
-- Feedback estructurado.
-- Aprobacion/rechazo formal.
-- Criterios o rubricas de evaluacion.
-- Integracion posterior con progreso y desbloqueos.
+- Integracion de progreso y desbloqueos a partir de evaluaciones aprobadas.
+- Reglas de avance entre cursos/modulos.
+- Indicadores de progreso del alumno.
+- Automatizacion posterior sobre eventos de evaluacion.

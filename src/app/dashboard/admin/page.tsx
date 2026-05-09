@@ -14,8 +14,10 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DELIVERABLE_STATUS_LABELS } from "@/constants/deliverables";
+import { EVALUATION_DECISION_LABELS } from "@/constants/evaluations";
 import { requireRole } from "@/server/guards/role-guard";
 import { getAdminDeliverables } from "@/server/queries/deliverables";
+import { getMentorAssignments } from "@/server/queries/evaluations";
 
 export const dynamic = "force-dynamic";
 
@@ -30,20 +32,30 @@ const executionData = [
 
 export default async function AdminDashboardPage() {
   await requireRole(["admin"]);
-  const deliverables = await getAdminDeliverables();
+  const [deliverables, assignments] = await Promise.all([
+    getAdminDeliverables(),
+    getMentorAssignments(),
+  ]);
   const sentDeliverables = deliverables.filter((item) =>
     ["submitted", "resubmitted", "under_review"].includes(item.status),
+  ).length;
+  const approved = deliverables.filter((item) => item.status === "approved").length;
+  const needsChanges = deliverables.filter((item) =>
+    ["changes_requested", "rejected"].includes(item.status),
   ).length;
   const activity = deliverables.slice(0, 4).map((item) => ({
     evento: item.title,
     modulo: item.course?.title ?? "Curso",
-    estado: DELIVERABLE_STATUS_LABELS[item.status],
+    estado:
+      item.status === "approved"
+        ? EVALUATION_DECISION_LABELS.approved
+        : DELIVERABLE_STATUS_LABELS[item.status],
   }));
 
   return (
     <div className="space-y-8">
       <PageHeader
-        actions={<StatusBadge status="Fase 5 activa" />}
+        actions={<StatusBadge status="Fase 6 activa" />}
         description="Vista base para operar usuarios, cursos, entregables, mentorias, pagos y reportes."
         eyebrow="Dashboard admin"
         title="Centro operativo"
@@ -64,17 +76,17 @@ export default async function AdminDashboardPage() {
           tone="info"
         />
         <MetricCard
-          detail="Bandeja de ejecucion"
+          detail={`${sentDeliverables} pendientes de revision`}
           icon={FileText}
           title="Entregables"
           value={String(deliverables.length)}
           tone="warning"
         />
         <MetricCard
-          detail="Agenda futura"
+          detail={`${assignments.length} asignaciones activas o historicas`}
           icon={CalendarClock}
-          title="Asesorias"
-          value="9"
+          title="Asignaciones"
+          value={String(assignments.length)}
           tone="success"
         />
         <MetricCard
@@ -115,14 +127,14 @@ export default async function AdminDashboardPage() {
       </div>
 
       <DashboardSection
-        description="Estas superficies quedan listas para conectar revision por mentor, feedback y reportes en fases posteriores."
-        title="Gestion inicial"
+        description="Fase 6 conecta revision de entregables, feedback y asignaciones sin activar pagos ni desbloqueos avanzados."
+        title="Gestion de revision"
       >
         <div className="grid gap-4 md:grid-cols-4">
           {["Usuarios", "Cursos", "Reportes"].map((item) => (
             <Card className="glass-panel rounded-lg" key={item}>
               <CardContent className="p-5">
-                <StatusBadge status="Proxima fase" />
+              <StatusBadge status="Proxima fase" />
                 <h3 className="mt-4 font-semibold">{item}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   Ruta creada y navegacion disponible para desarrollar la logica
@@ -134,10 +146,10 @@ export default async function AdminDashboardPage() {
           <Card className="glass-panel rounded-lg">
             <CardContent className="p-5">
               <StatusBadge status="Activo" />
-              <h3 className="mt-4 font-semibold">Entregables enviados</h3>
+              <h3 className="mt-4 font-semibold">Ciclo de feedback</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {sentDeliverables} entregables quedan listos para revision de
-                mentor en la siguiente fase.
+                {approved} aprobados y {needsChanges} con ajustes solicitados o
+                rechazo.
               </p>
             </CardContent>
           </Card>
@@ -146,4 +158,3 @@ export default async function AdminDashboardPage() {
     </div>
   );
 }
-

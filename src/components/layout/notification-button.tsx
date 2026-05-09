@@ -1,11 +1,10 @@
-import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { NotificationDropdown } from "@/features/evaluations/components/notification-dropdown";
+import type { Notification } from "@/types/evaluations";
 
-export function NotificationButton() {
-  return (
-    <Button size="icon" variant="ghost">
-      <Bell />
-      <span className="sr-only">Notificaciones</span>
-    </Button>
-  );
+export function NotificationButton({
+  notifications = [],
+}: {
+  notifications?: Notification[];
+}) {
+  return <NotificationDropdown notifications={notifications} />;
 }
