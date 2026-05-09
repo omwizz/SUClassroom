@@ -56,6 +56,15 @@ export async function findProfileByAuthUserId(authUserId: string) {
   return toProfile(profile, roles);
 }
 
+export async function assertProfileStorageAvailable() {
+  if (!hasDatabaseUrl()) {
+    return;
+  }
+
+  const db = getDb();
+  await db.select({ id: profiles.id }).from(profiles).limit(1);
+}
+
 export async function upsertProfileFromAuthUser(
   user: User,
   defaults?: {

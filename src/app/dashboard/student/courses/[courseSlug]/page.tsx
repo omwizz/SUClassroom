@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/shared/section-card";
 import { CourseDetail } from "@/features/courses/components/course-detail";
@@ -34,15 +34,23 @@ export default async function StudentCourseDetailPage({
     <div className="space-y-6">
       <CourseHeader backHref="/dashboard/student/courses" course={course} />
       <CourseDetail course={course} />
-      <SectionCard
-        actions={
-          firstLesson ? (
-            <Button asChild>
-              <Link href={`/courses/${course.slug}/lessons/${firstLesson.slug}`}>
-                Continuar
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </Button>
+        <SectionCard
+          actions={
+            firstLesson ? (
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="secondary">
+                <Link href={`/dashboard/student/deliverables/new?courseId=${course.id}`}>
+                  <Send aria-hidden="true" />
+                  Preparar entregable
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href={`/courses/${course.slug}/lessons/${firstLesson.slug}`}>
+                  Continuar
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
           ) : null
         }
         description="Puedes revisar el contenido publicado y sus recursos."
@@ -53,4 +61,3 @@ export default async function StudentCourseDetailPage({
     </div>
   );
 }
-

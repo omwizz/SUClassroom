@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SUClassroom | Ejecución guiada para proyectos reales",
+  title: "SUClassroom | Ejecucion guiada para proyectos reales",
   description:
     "Plataforma e-learning para aprender, aplicar, entregar proyectos y recibir feedback de mentores.",
 };
@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
-      <body className="flex min-h-dvh flex-col">
+      <body className="flex min-h-dvh flex-col bg-white">
         <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>

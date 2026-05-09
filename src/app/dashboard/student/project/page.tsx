@@ -13,7 +13,7 @@ export default async function StudentProjectPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Consulta la ficha base de tu proyecto. Esta fase no incluye entregables ni revision de mentor."
+        description="Consulta la ficha base de tu proyecto y mantenla alineada con los entregables que prepares en tus cursos."
         eyebrow="Alumno"
         title="Mi proyecto"
       />

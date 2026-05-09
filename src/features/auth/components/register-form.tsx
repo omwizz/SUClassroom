@@ -112,11 +112,11 @@ export function RegisterForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Contraseña</FormLabel>
+              <FormLabel>Contrasena</FormLabel>
               <FormControl>
                 <Input
                   autoComplete="new-password"
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder="Minimo 8 caracteres"
                   type="password"
                   {...field}
                 />

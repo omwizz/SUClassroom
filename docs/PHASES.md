@@ -32,11 +32,17 @@ Incluye:
 - Guards server-side por rol.
 - Redireccion por rol.
 
-Pendiente para validacion real:
+Validacion real aplicada:
 
-- Configurar Supabase y `DATABASE_URL`.
-- Aplicar migraciones en la base real.
-- Probar confirmacion de email con el proyecto Supabase del cliente.
+- Supabase conectado al proyecto real.
+- `DATABASE_URL` configurado con usuario dedicado `suclassroom_app`.
+- Migraciones aplicadas en la base real.
+- Sincronizacion Auth -> Profile con trigger y backfill de usuarios existentes.
+- RLS activado con politicas base para app server, usuarios autenticados y lectura publica de cursos publicados.
+
+Pendiente operativo:
+
+- Activar leaked password protection en Supabase Auth desde el dashboard.
 
 ## Fase 2: Layout base y dashboards iniciales
 
@@ -108,11 +114,38 @@ Notas:
 - Las acciones revalidan permisos y ownership aunque la UI ya este protegida por rutas.
 - Esta fase no incluye entregables formales, revision por mentor, feedback, aprobaciones, pagos, instituciones/cohortes, reportes avanzados ni IA.
 
+## Fase 5: Entregables, storage y reenvios
+
+Estado: completada.
+
+Incluye:
+
+- Schema Drizzle y migracion para `course_deliverable_requirements`, `deliverables`, `deliverable_files`, `deliverable_links` y `deliverable_versions`.
+- Constantes y tipos para estados de entregable y tipos de archivo permitidos.
+- Zod schemas `deliverableSchema`, `deliverableFileSchema`, `deliverableLinkSchema`, `submitDeliverableSchema` y `deliverableRequirementSchema`.
+- Services `DeliverableService` y `StorageService` para reglas de estado, snapshots, validacion de archivos, rutas de storage y signed URLs.
+- Queries para detalle de entregable con evidencia, entregables por alumno, proyecto, curso y bandeja admin.
+- Server Actions protegidas para crear/editar borrador, enviar, reenviar, adjuntar/quitar archivos, agregar/quitar links y preparar requisitos de curso.
+- Rutas de alumno `/dashboard/student/deliverables`, `/dashboard/student/deliverables/new`, detalle y edicion por id.
+- Rutas admin `/dashboard/admin/deliverables` y detalle por id.
+- Dashboard student con metrica y CTA de entregables.
+- Dashboard admin con metrica y actividad reciente de entregables.
+- CTA "Preparar entregable" en detalle de curso para alumno.
+- Bucket privado conceptual `deliverables` en Supabase Storage, creado bajo demanda desde servidor si `SUPABASE_SERVICE_ROLE_KEY` esta configurada.
+
+Notas:
+
+- Sin `DATABASE_URL`, las mutaciones devuelven un mensaje claro y no intentan persistir.
+- Sin `SUPABASE_SERVICE_ROLE_KEY`, la UI y la DB quedan preparadas, pero la carga privada de archivos devuelve un error claro.
+- Los alumnos solo acceden a sus propios entregables. Admin puede consultar todos.
+- No se implementa evaluacion por mentor, aprobacion/rechazo formal, feedback avanzado, pagos, mentorias completas, instituciones/cohortes, reportes avanzados ni IA.
+
 ## Siguiente fase
 
 Pendiente:
 
-- Entregables reales asociados a cursos/lecciones.
-- Revision, feedback y criterios de aprobacion.
-- Flujos de mentoria y evaluacion.
-
+- Revision por mentor.
+- Feedback estructurado.
+- Aprobacion/rechazo formal.
+- Criterios o rubricas de evaluacion.
+- Integracion posterior con progreso y desbloqueos.

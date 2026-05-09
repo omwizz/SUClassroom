@@ -82,11 +82,11 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Contraseña</FormLabel>
+              <FormLabel>Contrasena</FormLabel>
               <FormControl>
                 <Input
                   autoComplete="current-password"
-                  placeholder="Ingresa tu contraseña"
+                  placeholder="Ingresa tu contrasena"
                   type="password"
                   {...field}
                 />
@@ -102,7 +102,7 @@ export function LoginForm() {
           ) : (
             <LogIn aria-hidden="true" />
           )}
-          Iniciar sesión
+          Iniciar sesion
         </Button>
       </form>
     </Form>

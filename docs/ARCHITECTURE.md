@@ -12,7 +12,7 @@ src/app
 src/components
   ui shadcn, layout, shared y dashboard
 src/features
-  auth, courses y projects
+  auth, courses, projects y deliverables
 src/lib
   supabase, utils y validaciones
 src/server
@@ -24,7 +24,7 @@ src/types
 src/config
   navegacion de dashboard
 src/constants
-  roles, rutas, catalogos de cursos y catalogos de proyectos
+  roles, rutas, catalogos de cursos, proyectos y entregables
 ```
 
 ## Auth y RBAC
@@ -50,6 +50,7 @@ Permisos base:
 - Dashboard institution: `institution` o `admin`
 - Mutaciones de cursos/categorias/modulos/lecciones/recursos: solo `admin`
 - Onboarding y proyecto de alumno: `student` sobre su propia ficha. `admin` solo para consulta y archivo basico desde vistas administrativas.
+- Entregables: `student` crea/edita solo sus borradores y adjunta evidencia propia; `admin` consulta todos los entregables desde vistas administrativas.
 - Dashboard student redirige a `/onboarding` cuando el alumno no completo diagnostico inicial.
 
 ## Base de datos
@@ -73,6 +74,14 @@ Schema Drizzle de Fase 4:
 
 - `student_onboarding`: diagnostico inicial por alumno con perfil, experiencia, objetivo, area, etapa, desafio, motivacion y fecha de completado.
 - `student_projects`: ficha base del proyecto del alumno con nombre, slug, descripcion, problema, solucion, publico, etapa, area, impacto social y estado `draft/active/paused/completed/archived`.
+
+Schema Drizzle de Fase 5:
+
+- `course_deliverable_requirements`: consigna base de entregable por curso, tipos sugeridos, maximo de archivos y obligatoriedad.
+- `deliverables`: borrador/envio del alumno conectado a proyecto, curso y perfil, con estado y version actual.
+- `deliverable_files`: metadatos de archivos privados subidos a Supabase Storage.
+- `deliverable_links`: evidencia externa asociada al entregable.
+- `deliverable_versions`: historial de snapshots cuando el alumno envia o reenvia.
 
 El cliente Drizzle se inicializa de forma lazy en `src/db/client.ts` para evitar fallos durante `next build` cuando no existen variables locales.
 
@@ -108,7 +117,25 @@ La Fase 4 vive en:
 
 El onboarding usa un wizard client-side con React Hook Form y Zod, pero las mutaciones se hacen mediante Server Actions. Cada accion vuelve a verificar sesion, rol y ownership antes de escribir.
 
-El alumno puede registrar y editar su proyecto principal. El admin puede listar proyectos, filtrarlos por estado/etapa/busqueda, abrir una ficha basica y archivar un proyecto. No se implementan revision, feedback, aprobacion ni entregables formales en esta fase.
+El alumno puede registrar y editar su proyecto principal. El admin puede listar proyectos, filtrarlos por estado/etapa/busqueda, abrir una ficha basica y archivar un proyecto.
+
+## Entregables
+
+La Fase 5 vive en:
+
+- `src/constants/deliverables.ts`
+- `src/types/deliverables.ts`
+- `src/lib/validations/deliverables.ts`
+- `src/db/schema/deliverables.ts`
+- `src/server/queries/deliverables.ts`
+- `src/server/actions/deliverable-actions.ts`
+- `src/server/services/deliverable-service.ts`
+- `src/server/services/storage-service.ts`
+- `src/features/deliverables`
+
+El alumno puede crear borradores, editarlos mientras el estado lo permita, adjuntar archivos, agregar enlaces, enviar y reenviar cuando el estado sea `changes_requested` o `rejected`. Cada envio registra una version en `deliverable_versions`.
+
+El admin puede listar y abrir entregables, ver alumno, curso, proyecto, evidencia y versiones. No se implementan evaluacion por mentor, feedback, aprobacion/rechazo operativo ni cambios de estado de revision en esta fase.
 
 ## Supabase
 
@@ -118,7 +145,16 @@ Clientes:
 - `src/lib/supabase/server.ts`: cliente server con cookies async.
 - `src/lib/supabase/middleware.ts`: cliente para proxy.
 
-Storage queda preparado a nivel de variables y stack, pero la Fase 4 no implementa cargas de archivos ni usa service role key en cliente.
+Base de datos y seguridad:
+
+- `DATABASE_URL` debe usar un usuario dedicado de base de datos, no una clave publica ni service role. En el entorno Supabase actual se usa `suclassroom_app` por Transaction Pooler.
+- `src/db/client.ts` usa SSL, timeout y `prepare: false` para ser compatible con Supabase Pooler.
+- RLS esta activo en las tablas publicas de la app. El rol `suclassroom_app` conserva acceso server-side; usuarios autenticados solo pueden leer/editar datos propios en perfiles, onboarding, proyectos y entregables.
+- El contenido publicado de cursos queda disponible en lectura para `anon` y `authenticated` mediante politicas RLS.
+- `public.handle_new_auth_user()` sincroniza nuevos usuarios de Supabase Auth hacia `profiles` y `user_roles` mediante trigger interno sobre `auth.users`.
+- La funcion de sincronizacion no es invocable desde la API publica (`anon`/`authenticated` no tienen `EXECUTE`).
+
+Storage usa un bucket privado llamado `deliverables` por defecto. La carga y eliminacion de archivos ocurre en Server Actions mediante `StorageService`, con `SUPABASE_SERVICE_ROLE_KEY` solo en servidor. La UI recibe signed URLs temporales para abrir archivos privados cuando el entorno esta configurado.
 
 ## UI
 
@@ -183,7 +219,23 @@ Componentes de onboarding y proyectos:
 - `ProjectDetailView`
 - `NextStepCard`
 
+Componentes de entregables:
+
+- `DeliverableForm`
+- `DeliverableDraftEditor`
+- `DeliverableSubmitButton`
+- `DeliverableStatusBadge`
+- `DeliverableFileUploader`
+- `DeliverableFileList`
+- `DeliverableLinkForm`
+- `DeliverableLinkList`
+- `DeliverableVersionTimeline`
+- `StudentDeliverablesTable`
+- `AdminDeliverablesTable`
+- `DeliverableDetailView`
+- `DeliverableRequirementCard`
+- `SubmitConfirmationDialog`
+
 ## Limites de esta fase
 
-No se implementan entregables evaluables, rubricas, feedback, aprobaciones, mentorias completas, pagos, instituciones avanzadas, reportes reales, certificados, IA ni comunidad. La leccion `assignment_intro` solo prepara el contexto para futuros entregables.
-
+No se implementan evaluacion por mentor, rubricas, feedback, aprobaciones/rechazos formales desde mentor, mentorias completas, pagos, instituciones avanzadas, reportes reales, certificados, IA ni comunidad.

@@ -1,10 +1,25 @@
-import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "@/constants/roles";
+
+export type DashboardIconName =
+  | "bar-chart"
+  | "book-open"
+  | "briefcase"
+  | "calendar"
+  | "clipboard-check"
+  | "file-text"
+  | "folder"
+  | "graduation-cap"
+  | "handshake"
+  | "layout-dashboard"
+  | "message"
+  | "settings"
+  | "tags"
+  | "users";
 
 export type DashboardRoute = {
   title: string;
   href: string;
-  icon: LucideIcon;
+  icon: DashboardIconName;
   roles: UserRole[];
 };
 

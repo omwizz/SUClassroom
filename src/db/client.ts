@@ -7,17 +7,28 @@ type Database = ReturnType<typeof drizzle<typeof schema>>;
 let client: ReturnType<typeof postgres> | null = null;
 let db: Database | null = null;
 
+function normalizeEnvValue(value: string | undefined) {
+  return value?.trim().replace(/^["']|["']$/g, "") ?? "";
+}
+
 export function hasDatabaseUrl() {
-  return Boolean(process.env.DATABASE_URL);
+  return Boolean(normalizeEnvValue(process.env.DATABASE_URL));
 }
 
 export function getDb() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL no está configurado.");
+  const databaseUrl = normalizeEnvValue(process.env.DATABASE_URL);
+
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL no esta configurado.");
   }
 
   if (!client) {
-    client = postgres(process.env.DATABASE_URL, { max: 1 });
+    client = postgres(databaseUrl, {
+      connect_timeout: 10,
+      max: 1,
+      prepare: false,
+      ssl: "require",
+    });
   }
 
   if (!db) {

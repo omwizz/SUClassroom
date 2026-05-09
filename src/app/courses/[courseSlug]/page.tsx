@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/shared/section-card";
 import { CourseDetail } from "@/features/courses/components/course-detail";
@@ -34,12 +34,20 @@ export default async function CoursePage({ params }: CoursePageProps) {
         <SectionCard
           actions={
             firstLesson ? (
-              <Button asChild>
-                <Link href={`/courses/${course.slug}/lessons/${firstLesson.slug}`}>
-                  Empezar
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild variant="secondary">
+                  <Link href="/login">
+                    <Send aria-hidden="true" />
+                    Preparar entregable
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link href={`/courses/${course.slug}/lessons/${firstLesson.slug}`}>
+                    Empezar
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </Button>
+              </div>
             ) : null
           }
           description="La estructura está ordenada para aprender, aplicar y preparar evidencia."
@@ -51,4 +59,3 @@ export default async function CoursePage({ params }: CoursePageProps) {
     </main>
   );
 }
-

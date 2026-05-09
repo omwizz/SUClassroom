@@ -85,6 +85,7 @@ export const courses = pgTable(
   (table) => [
     uniqueIndex("courses_slug_idx").on(table.slug),
     index("courses_category_idx").on(table.categoryId),
+    index("courses_created_by_idx").on(table.createdBy),
     index("courses_status_idx").on(table.status),
     index("courses_sort_order_idx").on(table.sortOrder),
   ],
@@ -219,4 +220,3 @@ export const lessonResourceRelations = relations(lessonResources, ({ one }) => (
     references: [lessons.id],
   }),
 }));
-

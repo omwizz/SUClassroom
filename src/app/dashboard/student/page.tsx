@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Compass, FolderKanban, Target } from "lucide-react";
+import { BookOpen, Compass, FileText, FolderKanban, Target } from "lucide-react";
 import { ActionCard } from "@/components/dashboard/action-card";
 import { DashboardSection } from "@/components/dashboard/dashboard-section";
 import { MetricCard } from "@/components/dashboard/metric-card";
@@ -16,6 +16,7 @@ import {
   findCurrentStudentProject,
   findStudentOnboarding,
 } from "@/server/queries/projects";
+import { getStudentDeliverables } from "@/server/queries/deliverables";
 import { OnboardingService } from "@/server/services/onboarding-service";
 import { StudentProjectService } from "@/server/services/student-project-service";
 
@@ -24,10 +25,12 @@ export const dynamic = "force-dynamic";
 export default async function StudentDashboardPage() {
   const profile = await requireRole(["student", "admin"]);
   const name = profile.fullName?.split(" ")[0] ?? "Alumno";
-  const [onboarding, project] = await Promise.all([
+  const [onboarding, project, deliverables] = await Promise.all([
     findStudentOnboarding(profile.id),
     findCurrentStudentProject(profile.id),
+    getStudentDeliverables(profile.id),
   ]);
+  const latestDeliverable = deliverables.at(0);
   const nextStep = project
     ? StudentProjectService.nextStep(project)
     : OnboardingService.nextDashboardStep(onboarding);
@@ -46,7 +49,7 @@ export default async function StudentDashboardPage() {
         title={`Bienvenido, ${name}`}
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard
           detail="Diagnostico inicial completado"
           icon={Target}
@@ -76,6 +79,13 @@ export default async function StudentDashboardPage() {
           value="1"
           tone="success"
         />
+        <MetricCard
+          detail={latestDeliverable?.title ?? "Sin evidencia enviada"}
+          icon={FileText}
+          title="Entregables"
+          value={String(deliverables.length)}
+          tone="info"
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -100,10 +110,10 @@ export default async function StudentDashboardPage() {
       ) : null}
 
       <DashboardSection
-        description="Accesos de esta fase y superficies que siguen preparadas para fases posteriores."
+        description="Accesos principales para aprender, documentar evidencia y mantener tu proyecto en movimiento."
         title="Acciones"
       >
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <ActionCard
             description="Explora el catalogo creado en la fase anterior."
             href="/dashboard/student/courses"
@@ -115,6 +125,12 @@ export default async function StudentDashboardPage() {
             href="/dashboard/student/project"
             icon={FolderKanban}
             title="Mi proyecto"
+          />
+          <ActionCard
+            description="Crea borradores, adjunta evidencia y envia avances."
+            href="/dashboard/student/deliverables"
+            icon={FileText}
+            title="Entregables"
           />
           <ActionCard
             description="Ajusta diagnostico y datos base desde el flujo inicial."

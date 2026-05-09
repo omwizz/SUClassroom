@@ -6,12 +6,12 @@ export default function RegisterPage() {
   return (
     <AuthShell
       title="Crea tu cuenta"
-      description="Empieza con un rol base. El acceso admin debe asignarse internamente."
+      description="Empieza con un rol base, define tu punto de partida y convierte el aprendizaje en avance medible."
       footer={
         <>
-          ¿Ya tienes cuenta?{" "}
+          Ya tienes cuenta?{" "}
           <Link className="font-medium text-primary hover:underline" href="/login">
-            Inicia sesión
+            Inicia sesion
           </Link>
         </>
       }

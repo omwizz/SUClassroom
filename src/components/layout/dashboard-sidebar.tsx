@@ -2,13 +2,46 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap } from "lucide-react";
+import {
+  BarChart3,
+  BookOpen,
+  BriefcaseBusiness,
+  CalendarClock,
+  ClipboardCheck,
+  FileText,
+  FolderKanban,
+  GraduationCap,
+  Handshake,
+  LayoutDashboard,
+  MessageSquareText,
+  Settings,
+  Tags,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { RoleBadge } from "@/components/shared/role-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/types/auth";
-import type { DashboardRoute } from "@/types/dashboard";
+import type { DashboardIconName, DashboardRoute } from "@/types/dashboard";
+
+const dashboardIcons: Record<DashboardIconName, LucideIcon> = {
+  "bar-chart": BarChart3,
+  "book-open": BookOpen,
+  briefcase: BriefcaseBusiness,
+  calendar: CalendarClock,
+  "clipboard-check": ClipboardCheck,
+  "file-text": FileText,
+  folder: FolderKanban,
+  "graduation-cap": GraduationCap,
+  handshake: Handshake,
+  "layout-dashboard": LayoutDashboard,
+  message: MessageSquareText,
+  settings: Settings,
+  tags: Tags,
+  users: Users,
+};
 
 type DashboardSidebarProps = {
   profile: Profile;
@@ -46,6 +79,7 @@ export function DashboardSidebar({
 
       <nav className="flex-1 space-y-1 px-3">
         {navigation.map((item) => {
+          const Icon = dashboardIcons[item.icon];
           const isActive =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`));
@@ -60,7 +94,7 @@ export function DashboardSidebar({
               key={`${item.href}-${item.title}`}
               onClick={onNavigate}
             >
-              <item.icon className="size-4" />
+              <Icon className="size-4" />
               <span>{item.title}</span>
             </Link>
           );

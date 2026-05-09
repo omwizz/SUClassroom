@@ -39,7 +39,6 @@ export const profiles = pgTable(
       .notNull(),
   },
   (table) => [
-    uniqueIndex("profiles_auth_user_id_idx").on(table.authUserId),
     index("profiles_email_idx").on(table.email),
   ],
 );

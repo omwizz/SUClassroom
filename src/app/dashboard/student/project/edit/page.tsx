@@ -13,7 +13,7 @@ export default async function StudentProjectEditPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Actualiza la ficha inicial de tu proyecto. Los entregables formales se implementaran en una fase posterior."
+        description="Actualiza la ficha inicial de tu proyecto para que tus entregables queden conectados a un contexto real."
         eyebrow="Alumno"
         title={project ? "Editar proyecto" : "Crear proyecto"}
       />
@@ -25,4 +25,3 @@ export default async function StudentProjectEditPage() {
     </div>
   );
 }
-

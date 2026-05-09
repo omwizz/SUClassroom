@@ -8,7 +8,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   student: "Alumno",
   mentor: "Mentor",
   admin: "Administrador",
-  institution: "Institución",
+  institution: "Institucion",
 };
 
 export const PUBLIC_REGISTRATION_ROLES = [

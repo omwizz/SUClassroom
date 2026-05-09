@@ -1,18 +1,20 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { DEFAULT_ROLE, isUserRole } from "@/constants/roles";
 import {
   getDashboardRouteForRole,
   isAuthRoute,
   isProtectedRoute,
 } from "@/constants/routes";
-import { hasSupabasePublicConfig } from "@/lib/supabase/env";
+import { getSupabasePublicConfigStatus } from "@/lib/supabase/env";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const pathname = request.nextUrl.pathname;
+  const configStatus = getSupabasePublicConfigStatus();
 
-  if (!hasSupabasePublicConfig()) {
+  if (!configStatus.ok) {
     if (isProtectedRoute(pathname)) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -20,9 +22,10 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
+  const { url, anonKey } = configStatus.config;
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         getAll() {
@@ -43,9 +46,20 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: User | null = null;
+
+  try {
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+    user = currentUser;
+  } catch {
+    if (isProtectedRoute(pathname)) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    return response;
+  }
 
   if (!user && isProtectedRoute(pathname)) {
     return NextResponse.redirect(new URL("/login", request.url));
