@@ -9,6 +9,10 @@ import {
   getEmailConfirmationRedirectUrl,
   getSupabasePublicConfigStatus,
 } from "@/lib/supabase/env";
+import {
+  createSupabaseAdminClient,
+  hasSupabaseServiceRoleKey,
+} from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   loginSchema,
@@ -30,6 +34,7 @@ import {
   buildProfileFromSupabaseUser,
   getRoleFromUserMetadata,
 } from "@/server/services/auth-service";
+import { createConfirmedDevelopmentAuthUser as createConfirmedDevelopmentAuthUserByDatabase } from "@/server/queries/dev-auth";
 import type { Profile } from "@/types/auth";
 
 type FieldErrors = Record<string, string[] | undefined>;
@@ -144,6 +149,16 @@ function supabaseAuthError(error: unknown, fallbackMessage: string) {
     return supabaseRequestFailed(error);
   }
 
+  if (
+    normalizedMessage.includes("email rate limit exceeded") ||
+    normalizedMessage.includes("rate limit") ||
+    normalizedMessage.includes("too many requests")
+  ) {
+    return actionError(
+      "Supabase bloqueo temporalmente el envio de correos de verificacion. El proveedor de email integrado permite muy pocos correos por hora; espera a que se libere el limite o configura un SMTP propio en Supabase Auth.",
+    );
+  }
+
   if (normalizedMessage.includes("email not confirmed")) {
     return actionError(
       "Tu email todavia no esta confirmado. Revisa el ultimo correo de Supabase o reenvia la verificacion.",
@@ -151,6 +166,123 @@ function supabaseAuthError(error: unknown, fallbackMessage: string) {
   }
 
   return actionError(message || fallbackMessage);
+}
+
+function isEmailRateLimitError(error: unknown) {
+  const message = getErrorMessage(error).toLowerCase();
+
+  return (
+    message.includes("email rate limit exceeded") ||
+    message.includes("rate limit") ||
+    message.includes("too many requests")
+  );
+}
+
+async function createConfirmedDevelopmentUser(input: {
+  email: string;
+  password: string;
+  fullName: string;
+  role: Exclude<RegisterInput["role"], "admin">;
+}): Promise<AuthActionState | null> {
+  if (process.env.NODE_ENV === "production") {
+    return null;
+  }
+
+  if (!hasSupabaseServiceRoleKey()) {
+    try {
+      const created = await createConfirmedDevelopmentAuthUserByDatabase(input);
+
+      if (!created) {
+        return null;
+      }
+
+      return signInAfterConfirmedDevelopmentUser(input);
+    } catch (error) {
+      const message = getErrorMessage(error);
+
+      if (message.includes("DEV_AUTH_FALLBACK_USER_ALREADY_CONFIRMED")) {
+        return actionError(
+          "Ese email ya tiene una cuenta confirmada. Inicia sesion o usa recuperar contrasena.",
+        );
+      }
+
+      return actionError(
+        "No se pudo activar el fallback local de registro. Revisa que la migracion 0010 este aplicada.",
+      );
+    }
+  }
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin.auth.admin.createUser({
+    email: input.email,
+    password: input.password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: input.fullName,
+      active_role: input.role,
+    },
+  });
+
+  if (error || !data.user) {
+    const message = getErrorMessage(error).toLowerCase();
+
+    if (
+      message.includes("already registered") ||
+      message.includes("already been registered") ||
+      message.includes("already exists")
+    ) {
+      return actionError(
+        "Ese email ya tiene una cuenta creada. Inicia sesion o usa recuperar contrasena.",
+      );
+    }
+
+    return supabaseAuthError(
+      error,
+      "No se pudo crear la cuenta con el fallback local.",
+    );
+  }
+
+  await upsertProfileFromAuthUser(data.user, {
+    fullName: input.fullName,
+    email: input.email,
+    role: input.role,
+  });
+
+  return signInAfterConfirmedDevelopmentUser(input);
+}
+
+async function signInAfterConfirmedDevelopmentUser(input: {
+  email: string;
+  password: string;
+  role: Exclude<RegisterInput["role"], "admin">;
+}): Promise<AuthActionState> {
+  const supabase = await createSupabaseServerClient();
+  const { data: sessionData, error: signInError } =
+    await supabase.auth.signInWithPassword({
+      email: input.email,
+      password: input.password,
+    });
+
+  if (!signInError && sessionData.user) {
+    const profile = await upsertProfileFromAuthUser(sessionData.user, {
+      email: sessionData.user.email,
+      role: input.role,
+    });
+
+    return {
+      ok: true,
+      message:
+        "Cuenta creada y verificada para desarrollo local. Sesion iniciada.",
+      redirectTo: getDashboardRouteForRole(profile.activeRole),
+    };
+  }
+
+  return {
+    ok: true,
+    message:
+      "Cuenta creada y verificada para desarrollo local. Ya puedes iniciar sesion.",
+    redirectTo: "/login?verified=1",
+  };
 }
 
 export async function registerUser(
@@ -187,6 +319,19 @@ export async function registerUser(
     });
 
     if (error) {
+      if (isEmailRateLimitError(error)) {
+        const localFallback = await createConfirmedDevelopmentUser({
+          email,
+          password,
+          fullName,
+          role,
+        });
+
+        if (localFallback) {
+          return localFallback;
+        }
+      }
+
       return supabaseAuthError(error, "No se pudo crear la cuenta.");
     }
 

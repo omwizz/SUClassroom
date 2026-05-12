@@ -11,6 +11,7 @@ export type DashboardIconName =
   | "graduation-cap"
   | "handshake"
   | "layout-dashboard"
+  | "lock"
   | "message"
   | "settings"
   | "tags"

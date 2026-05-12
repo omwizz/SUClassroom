@@ -196,3 +196,25 @@ export async function getProfilesByRole(role: UserRole) {
 
   return rows.map((row) => toProfile(row.profile, [row.role]));
 }
+
+export async function getProfiles() {
+  if (!hasDatabaseUrl()) {
+    return [];
+  }
+
+  const db = getDb();
+  const [profileRows, roleRows] = await Promise.all([
+    db
+      .select()
+      .from(profiles)
+      .orderBy(asc(profiles.fullName), asc(profiles.email)),
+    db.select().from(userRoles),
+  ]);
+
+  return profileRows.map((profile) =>
+    toProfile(
+      profile,
+      roleRows.filter((role) => role.profileId === profile.id),
+    ),
+  );
+}

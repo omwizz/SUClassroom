@@ -42,6 +42,7 @@ import {
 import { findStudentProjectById } from "@/server/queries/projects";
 import { DeliverableService } from "@/server/services/deliverable-service";
 import { StorageService } from "@/server/services/storage-service";
+import { onDeliverableSubmitted } from "@/server/actions/progress-actions";
 import type {
   DeliverableActionState,
   DeliverableFilters,
@@ -341,6 +342,9 @@ async function submitStudentDeliverable(
 
   try {
     const submitted = await submitDeliverableById(deliverable.id);
+    if (submitted) {
+      await onDeliverableSubmitted(submitted.id);
+    }
     revalidateDeliverableSurfaces(deliverable.id);
     return {
       ok: Boolean(submitted),

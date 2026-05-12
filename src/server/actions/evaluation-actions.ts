@@ -38,6 +38,10 @@ import {
   updateFeedbackRecord,
 } from "@/server/queries/evaluations";
 import { EvaluationService } from "@/server/services/evaluation-service";
+import {
+  onDeliverableApproved,
+  onDeliverableRejected,
+} from "@/server/actions/progress-actions";
 import type { EvaluationActionState } from "@/types/evaluations";
 
 const assignmentToDeliverableSchema = z.object({
@@ -382,6 +386,15 @@ export async function submitEvaluation(
       guard.profile.id,
       parsed.data,
     );
+    if (evaluation && parsed.data.decision === "approved") {
+      await onDeliverableApproved(guard.deliverable.id);
+    }
+    if (
+      evaluation &&
+      ["rejected", "changes_requested"].includes(parsed.data.decision)
+    ) {
+      await onDeliverableRejected(guard.deliverable.id);
+    }
     revalidateReviewSurfaces(guard.deliverable.id);
     return {
       ok: Boolean(evaluation),

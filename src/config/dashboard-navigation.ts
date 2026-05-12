@@ -16,6 +16,12 @@ export const dashboardNavigation: Record<UserRole, DashboardRoute[]> = {
       roles: ["student", "admin"],
     },
     {
+      title: "Progreso",
+      href: "/dashboard/student/progress",
+      icon: "clipboard-check",
+      roles: ["student", "admin"],
+    },
+    {
       title: "Mi proyecto",
       href: "/dashboard/student/project",
       icon: "folder",
@@ -143,6 +149,12 @@ export const dashboardNavigation: Record<UserRole, DashboardRoute[]> = {
       title: "Entregables",
       href: "/dashboard/admin/deliverables",
       icon: "file-text",
+      roles: ["admin"],
+    },
+    {
+      title: "Desbloqueos",
+      href: "/dashboard/admin/course-unlock-rules",
+      icon: "lock",
       roles: ["admin"],
     },
     {

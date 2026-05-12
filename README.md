@@ -17,8 +17,9 @@ Fases implementadas:
 - Fase 4: onboarding inicial del alumno, diagnostico inicial, registro/edicion de proyecto, dashboard student conectado y vista administrativa basica de proyectos.
 - Fase 5: entregables del alumno con borradores, envio, archivos privados en Supabase Storage, enlaces, versiones, reenvio basico y vista admin.
 - Fase 6: evaluacion de entregables, asignacion basica de mentores, feedback estructurado, aprobacion/rechazo/solicitud de cambios, historial y notificaciones internas.
+- Fase 7: progreso de cursos, avance por leccion, estados de acceso, desbloqueos basicos, reglas admin, historial de eventos e integracion con entregables aprobados.
 
-No estan implementados todavia mentorias completas, pagos, reportes avanzados, certificados, IA, comunidad ni desbloqueos automaticos avanzados.
+No estan implementados todavia mentorias completas, pagos, reportes avanzados, certificados, IA, comunidad ni desbloqueos avanzados por cohortes/instituciones.
 
 ## Stack
 
@@ -62,7 +63,7 @@ SENTRY_DSN=
 
 Sin Supabase configurado, las rutas protegidas redirigen a `/login` y los formularios muestran un mensaje de configuracion pendiente. Sin `DATABASE_URL`, el catalogo usa datos demo publicados, pero las mutaciones administrativas no persisten.
 
-Las fases 5 y 6 requieren `DATABASE_URL` para persistir entregables, evaluaciones, feedback, asignaciones y notificaciones. La carga de archivos usa el bucket privado `deliverables` mediante `SUPABASE_SERVICE_ROLE_KEY` solo en servidor; no se usa ninguna service role key en componentes client-side ni variables `NEXT_PUBLIC`.
+Las fases 5, 6 y 7 requieren `DATABASE_URL` para persistir entregables, evaluaciones, feedback, asignaciones, notificaciones, progreso, eventos y desbloqueos. La carga de archivos usa el bucket privado `deliverables` mediante `SUPABASE_SERVICE_ROLE_KEY` solo en servidor; no se usa ninguna service role key en componentes client-side ni variables `NEXT_PUBLIC`.
 
 ## Rutas principales
 
@@ -78,6 +79,7 @@ Las fases 5 y 6 requieren `DATABASE_URL` para persistir entregables, evaluacione
 - `/dashboard/student`
 - `/dashboard/student/courses`
 - `/dashboard/student/courses/[courseSlug]`
+- `/dashboard/student/progress`
 - `/dashboard/student/project`
 - `/dashboard/student/project/edit`
 - `/dashboard/student/deliverables`
@@ -93,6 +95,8 @@ Las fases 5 y 6 requieren `DATABASE_URL` para persistir entregables, evaluacione
 - `/dashboard/mentor/feedback`
 - `/dashboard/mentor/students`
 - `/dashboard/admin`
+- `/dashboard/admin/users`
+- `/dashboard/admin/users/[userId]/progress`
 - `/dashboard/admin/courses`
 - `/dashboard/admin/courses/new`
 - `/dashboard/admin/courses/[courseId]/edit`
@@ -104,6 +108,7 @@ Las fases 5 y 6 requieren `DATABASE_URL` para persistir entregables, evaluacione
 - `/dashboard/admin/deliverables/[deliverableId]`
 - `/dashboard/admin/deliverables/[deliverableId]/review`
 - `/dashboard/admin/mentor-assignments`
+- `/dashboard/admin/course-unlock-rules`
 - `/dashboard/institution`
 
 ## Documentacion
@@ -116,3 +121,4 @@ Las fases 5 y 6 requieren `DATABASE_URL` para persistir entregables, evaluacione
 - [Entregables](./docs/DELIVERABLES.md)
 - [Storage](./docs/STORAGE.md)
 - [Evaluaciones y feedback](./docs/EVALUATIONS_FEEDBACK.md)
+- [Progreso y desbloqueos](./docs/PROGRESS_UNLOCKS.md)

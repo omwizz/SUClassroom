@@ -13,10 +13,11 @@ Documento de referencia de la Fase 6.
 - Historial de evaluaciones y feedback.
 - Notificaciones internas basicas para alumnos.
 - Dashboards student, mentor y admin conectados a estados reales.
+- Conexion con progreso/desbloqueos: una aprobacion puede completar el curso y evaluar reglas del siguiente curso.
 
 ## Fuera de alcance
 
-No se implementan pagos, Qulqi, mentorias completas, calendario avanzado, desbloqueos automaticos avanzados, reportes avanzados, instituciones/cohortes, IA ni certificados.
+No se implementan pagos, Qulqi, mentorias completas, calendario avanzado, desbloqueos avanzados por pago/mentoria, reportes avanzados, instituciones/cohortes, IA ni certificados.
 
 ## Tablas
 
@@ -130,6 +131,8 @@ AssignmentStatus:
 - Feedback no puede editarse por student.
 - Cada evaluacion y feedback queda en historial.
 - La notificacion interna apunta al detalle de feedback del entregable.
+- Si la decision es `approved`, se llama a `onDeliverableApproved` para actualizar `user_course_progress`, registrar eventos y evaluar reglas de desbloqueo.
+- Si la decision es `rejected` o `changes_requested`, se llama a `onDeliverableRejected` para registrar evento y devolver el curso a estado de avance.
 
 ## Rutas
 

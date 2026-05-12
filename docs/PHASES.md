@@ -174,11 +174,40 @@ Notas:
 - Las notificaciones internas quedan preparadas para el alumno.
 - Esta fase no implementa pagos, Qulqi, mentorias completas, desbloqueos automaticos avanzados, reportes avanzados, instituciones/cohortes, IA ni certificados.
 
+## Fase 7: Progreso y desbloqueos
+
+Estado: completada.
+
+Incluye:
+
+- Schema Drizzle y migracion para `user_course_progress`, `user_lesson_progress`, `course_unlocks`, `course_unlock_rules` y `progress_events`.
+- Constantes y tipos para estados de progreso, estados de leccion, eventos y razones de desbloqueo.
+- Zod schemas `startCourseSchema`, `completeLessonSchema`, `unlockCourseSchema`, `courseUnlockRuleSchema` y `manualUnlockSchema`.
+- Services `ProgressService`, `CourseUnlockService` y `NextStepService`.
+- Queries y Server Actions para iniciar curso, completar leccion, calcular progreso, registrar eventos, crear/actualizar reglas, evaluar siguiente curso y desbloquear manualmente.
+- Integracion con envio de entregables y evaluaciones aprobadas/rechazadas.
+- Ruta `/dashboard/student/progress`.
+- Vista de cursos de alumno con estados bloqueado/disponible/en progreso/completado.
+- Detalle de curso de alumno con progreso por leccion y bloqueo de contenido cuando el curso esta bloqueado.
+- Ruta admin `/dashboard/admin/course-unlock-rules`.
+- Ruta admin `/dashboard/admin/users/[userId]/progress`.
+- Listado admin de usuarios con enlace al progreso individual.
+- Dashboard student actualizado con resumen de progreso y siguiente paso.
+
+Notas:
+
+- El primer curso gratuito queda disponible.
+- Las lecciones actualizan porcentaje, pero no completan el curso por si solas.
+- El curso se completa cuando el entregable requerido es aprobado.
+- La aprobacion evalua reglas y desbloquea cursos siguientes que no requieran pago ni mentoria.
+- Las banderas de pago y mentoria solo preparan reglas futuras; no implementan pagos, Qulqi ni mentorias completas.
+- Esta fase no implementa reportes avanzados, instituciones/cohortes avanzadas, IA, certificados ni gamificacion avanzada.
+
 ## Siguiente fase
 
 Pendiente:
 
-- Integracion de progreso y desbloqueos a partir de evaluaciones aprobadas.
-- Reglas de avance entre cursos/modulos.
-- Indicadores de progreso del alumno.
-- Automatizacion posterior sobre eventos de evaluacion.
+- Pagos/Qulqi o reglas comerciales reales de desbloqueo.
+- Mentorias completas y validacion de regla `requires_mentorship`.
+- Reportes avanzados sobre progreso por cohortes/instituciones.
+- Certificados, IA o gamificacion avanzada.

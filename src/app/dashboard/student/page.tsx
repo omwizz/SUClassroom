@@ -6,6 +6,7 @@ import {
   FolderKanban,
   MessageSquareText,
   Target,
+  TrendingUp,
 } from "lucide-react";
 import { ActionCard } from "@/components/dashboard/action-card";
 import { DashboardSection } from "@/components/dashboard/dashboard-section";
@@ -25,19 +26,24 @@ import {
 } from "@/server/queries/projects";
 import { getStudentDeliverables } from "@/server/queries/deliverables";
 import { getStudentFeedback } from "@/server/queries/evaluations";
+import { getStudentProgressSummary } from "@/server/queries/progress";
 import { OnboardingService } from "@/server/services/onboarding-service";
+import { NextStepService } from "@/server/services/next-step-service";
 import { StudentProjectService } from "@/server/services/student-project-service";
+import { NextStepCard as ProgressNextStepCard } from "@/features/progress/components/next-step-card";
 
 export const dynamic = "force-dynamic";
 
 export default async function StudentDashboardPage() {
   const profile = await requireRole(["student", "admin"]);
   const name = profile.fullName?.split(" ")[0] ?? "Alumno";
-  const [onboarding, project, deliverables, feedback] = await Promise.all([
+  const [onboarding, project, deliverables, feedback, progressSummary] =
+    await Promise.all([
     findStudentOnboarding(profile.id),
     findCurrentStudentProject(profile.id),
     getStudentDeliverables(profile.id),
     getStudentFeedback(profile.id),
+    getStudentProgressSummary(profile.id),
   ]);
   const latestDeliverable = deliverables.at(0);
   const latestFeedback = feedback.at(0);
@@ -50,6 +56,7 @@ export default async function StudentDashboardPage() {
         project.currentStage,
       )
     : "de-la-idea-a-la-validacion-inicial";
+  const progressNextStep = NextStepService.fromProgressSummary(progressSummary);
 
   return (
     <div className="space-y-8">
@@ -86,8 +93,15 @@ export default async function StudentDashboardPage() {
           detail="Curso inicial recomendado"
           icon={BookOpen}
           title="Siguiente curso"
-          value="1"
+          value={String(progressSummary.availableCourses)}
           tone="success"
+        />
+        <MetricCard
+          detail="Promedio de la ruta"
+          icon={TrendingUp}
+          title="Progreso"
+          value={`${progressSummary.averageProgress}%`}
+          tone="info"
         />
         <MetricCard
           detail={latestDeliverable?.title ?? "Sin evidencia enviada"}
@@ -111,7 +125,10 @@ export default async function StudentDashboardPage() {
         ) : (
           <StudentProjectPanel project={null} />
         )}
-        <NextStepCard {...nextStep} />
+        <div className="space-y-4">
+          <NextStepCard {...nextStep} />
+          <ProgressNextStepCard step={progressNextStep} />
+        </div>
       </div>
 
       {project ? (
@@ -136,6 +153,12 @@ export default async function StudentDashboardPage() {
             href="/dashboard/student/courses"
             icon={BookOpen}
             title="Ver cursos"
+          />
+          <ActionCard
+            description="Consulta desbloqueos, avance y actividad reciente."
+            href="/dashboard/student/progress"
+            icon={TrendingUp}
+            title="Mi progreso"
           />
           <ActionCard
             description="Consulta o edita la ficha inicial de tu proyecto."

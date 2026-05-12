@@ -401,10 +401,13 @@ export async function getMentorDeliverables(mentorId: string): Promise<MentorDel
     return [];
   }
 
-  const [deliverableItems, assignments] = await Promise.all([
-    getAdminDeliverables(),
-    getActiveAssignmentsForMentor(mentorId),
-  ]);
+  const assignments = await getActiveAssignmentsForMentor(mentorId);
+
+  if (assignments.length === 0) {
+    return [];
+  }
+
+  const deliverableItems = await getAdminDeliverables();
 
   const assigned = deliverableItems.filter((deliverable) =>
     assignments.some((assignment) =>
